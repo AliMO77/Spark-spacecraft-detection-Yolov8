@@ -14,40 +14,44 @@ from PIL import Image
 import warnings
 
 
-
 class ObjectDetector:
    
     warnings.simplefilter("ignore", category=FutureWarning)
 
-    def __init__(self,data = '/home/users/maali/Computer_vision_SOC/config.yaml',model ='yolov8m.pt' ):
+    def __init__(self,data = '/home/users/maali/Computer_vision_SOC/config.yaml',model ='/home/users/maali/Computer_vision_SOC/runs/detect/train10/weights/best.pt' ):
         self.data = data
         self.model = model 
         pass
 
-    def train_yolo_model(self,epochs=25,patience=5,batch=8,lr0=0.0005,imgsz=640,optimizer='auto',cos_lr=True):
+    def train_yolo_model(self,epochs=25,patience=5,batch=8,lr0=0.0005,imgsz=640,optimizer='auto',cos_lr=True, resume = False,project='/home/users/maali/Computer_vision_SOC/runs/detect',max_det=1,save_dir=None):
 
         # Specify the save directory for training runs
-        save_dir = '/home/users/maali/Computer_vision_SOC/runs/detect'
+        
         model = self.model
-        data=self.data
         args = dict(
             model= model, 
             data=self.data, 
             imgsz=imgsz,
-            project=save_dir,
+            project=project,
             epochs=epochs,
             optimizer=optimizer,
             patience=patience,
             batch=16,
             lr0=lr0,
             cos_lr = cos_lr,
+            resume = resume,
+            max_det=max_det,
+            save_dir=save_dir
             )
         
         trainer = DetectionTrainer(overrides=args)
         trainer.train()
 
     
-    def test_predict(self,model ='/home/users/maali/Computer_vision_SOC/runs/detect/train/weights/best.pt',num_images=10):
+    def test_predict(self,model ='/home/users/maali/Computer_vision_SOC/runs/detect/train/weights/best.pt',num_images=10,
+                     output_directory="/home/users/maali/Computer_vision_SOC/samples/test_predict_samples", 
+                     project='/home/users/maali/Computer_vision_SOC/runs/detect/predictions',
+    ):
 
         # Set the directory containing your number images
         directory_path = "/home/users/maali/Computer_vision_SOC/samples/test/images"
@@ -56,7 +60,7 @@ class ObjectDetector:
         num_images_to_select = num_images
 
         # Specify the directory where you want to save the selected images
-        output_directory = "/home/users/maali/Computer_vision_SOC/samples/test_predict_samples"
+        output_directory = output_directory
         os.makedirs(output_directory, exist_ok=True)
                 # Remove any existing files in the output directory    
         for file in os.listdir(output_directory):
@@ -90,21 +94,36 @@ class ObjectDetector:
         model = YOLO(model)
         model.predict(
         source = output_directory,
-        project='/home/users/maali/Computer_vision_SOC/runs/detect/predictions',
+        project=project,
+    
         save=True)
     
 
  
 
-    def predict_with_yolo(self, test_images_dir,all_labels,model = '/home/users/maali/Computer_vision_SOC/runs/detect/train/weights/best.pt',imgsiz = 256):
+    def predict_with_yolo(self, test_images_dir,all_labels,model = '/home/users/maali/Computer_vision_SOC/runs/detect/train/weights/best.pt',imgsiz = 256,device=0,max_det=1):
         # Perform predictions with the YOLO model
+        def convert_bbox_to_corners(bbox):
+            
+            x_center, y_center, width, height = bbox
+
+            x1 = x_center - (width / 2)
+            y1 = y_center - (height / 2)
+            x2 = x_center + (width / 2)
+            y2 = y_center + (height / 2)
+
+            return [y1, x1, y2, x2]
+        
+        
+        
         model = YOLO(model)
         res = model.predict(
             source=test_images_dir,
             stream=True,
             project='/home/users/maali/Computer_vision_SOC/runs/detect/predictions',
-            max_det = 1,
-            imgsz = imgsiz
+            max_det = max_det,
+            imgsz = imgsiz,
+            batch = 16,
         )
         
         imgs = []
@@ -120,15 +139,16 @@ class ObjectDetector:
                 label_idx = int(boxes.cls[idx])
                 label = all_labels[label_idx]
                 bbox = boxes.xywh[idx]
+                bbox = convert_bbox_to_corners(bbox)
                 pred_labels.append(label)
                 preds_bbox.append(bbox)
-            else:
+            else:   
                     pred_labels.append('no detection')
                     preds_bbox.append('no detection')
 
             imgs.append(name)
 
-            preds_df = pd.DataFrame({'filename': imgs, 'class': pred_labels,'bbox':preds_bbox})
+        preds_df = pd.DataFrame({'filename': imgs, 'class': pred_labels,'bbox':preds_bbox})
 
         return preds_df
 
@@ -137,17 +157,17 @@ class ObjectDetector:
     def classification_report(self, true_df, predicted_df,all_labels):
         merged_df = pd.merge(true_df, predicted_df, on='filename')
 
-        accuracy = round(accuracy_score(merged_df['class_x'], merged_df['class_y']) * 100,2)
-        precision, recall, f1_score, support = precision_recall_fscore_support(
-                merged_df['class_x'],
-                  merged_df['class_y'], average='weighted')  # Compute weighted average
+        accuracy = accuracy_score(merged_df['class_x'], merged_df['class_y'])
+        # precision, recall, f1_score, support = precision_recall_fscore_support(
+        #         merged_df['class_x'],
+        #           merged_df['class_y'])  
         
-        
+        print(" accuracy : {accuracy} ")
         overall_dict = {
-            'Accuracy': accuracy ,
-            'precision': round(precision,2),
-            'recall': round(recall,2),
-            'F1-score': round(f1_score,2)
+            'Overall Accuracy': round(accuracy  * 100,2),
+            # 'precision': round(precision[-1]* 100,2),
+            # 'recall': round(recall[-1]* 100,2),
+            # 'F1-score': round(f1_score[-1]* 100,2)
         }
 
         class_wise_stats = {}
@@ -163,22 +183,21 @@ class ObjectDetector:
                         ) 
                         * 100,2,)
                
-                p, r, f1, _ = precision_recall_fscore_support(
-                merged_on_class['class_x'] ,  
-                merged_on_class['class_y'] ,
-                average='micro')
-                
+                # p, r, f1, _ = precision_recall_fscore_support(
+                # merged_on_class['class_x'] ,  
+                # merged_on_class['class_y'] ,average=None)
+               
                 class_wise_stats[label] = {
                         'accuracy' : round(acc,2),
-                        'precision': round(p* 100,2),
-                        'recall': round(r* 100,2),
-                        'f1_score': round(f1* 100,2)
+                        # 'precision': round(p.max()*100,2),
+                        # 'recall': round(r.max()* 100,2),
+                        # 'f1_score': round(f1.max()* 100,2)
             }
         
         combined_dict = {**overall_dict, **class_wise_stats}
 
         # Define the file path where you want to save the JSON data
-        file_path = '/home/users/maali/Computer_vision_SOC/performanceResults/classification_results.json'
+        file_path = '/home/users/maali/Computer_vision_SOC/source/performanceResults/classification_results.json'
 
         # Write the combined dictionary to the file in JSON format
         with open(file_path, 'w') as json_file:
@@ -189,7 +208,7 @@ class ObjectDetector:
 
     
 
-    def iou_report(sel,true_df,predictions_df,all_labels):
+    def iou_report(self,true_df,predictions_df,all_labels):
 
         def calculate_iou(boxA, boxB):
             # Determine the coordinates of the intersection rectangle
@@ -209,17 +228,7 @@ class ObjectDetector:
             iou = interArea / float(boxAArea + boxBArea - interArea)
             
             return iou
-        
-        def convert_bbox_to_corners(bbox):
-            
-            x_center, y_center, width, height = bbox
 
-            x1 = x_center - (width / 2)
-            y1 = y_center - (height / 2)
-            x2 = x_center + (width / 2)
-            y2 = y_center + (height / 2)
-
-            return [y1, x1, y2, x2]
         
         merged_df = pd.merge(true_df, predictions_df, on='filename')
         iou_scores = []
@@ -227,22 +236,26 @@ class ObjectDetector:
         adict = {}
         for actual, pred in zip(merged_df['bbox_x'], merged_df['bbox_y']):
             if pred is None or pred == 'no detection' or actual is None or actual == 'no detection':
-                iou_scores.append('no detection')
-            else:
-                pred = convert_bbox_to_corners(pred)
+                #iou_scores.append('no detection')
+                
+                pred = [0,0,0,0]
                 iou = calculate_iou(actual, pred)
+                iou_scores.append(iou)
+            else: 
+                if type(pred)== str:
+                    y1,x1,y2,x2 = eval(pred)
+                    pred = [y1,x1,y2,x2]
+                iou = calculate_iou(actual, np.array(pred))
                 iou_scores.append(iou)
 
         merged_df['ious'] = iou_scores
-
-        scores = [s for s in iou_scores if s!='no detection']
-        adict['Average iou score']= {
-            'mean':round(np.mean(scores)*100,2),
-            'min': round(min(scores)*100,2),
-            'max': round(max(scores)*100,2)
-            
+        
+        
+        adict['Overall iou score']= {
+            'mean':round(np.mean(iou_scores)*100,2),
+            'min': round(min(iou_scores)*100,2),
+            'max': round(max(iou_scores)*100,2)            
             }
-
         for label in all_labels:
             df = merged_df[(merged_df['class_x'] == label) & (merged_df['ious'] != 'no detection')]
             adict[label]={
@@ -253,15 +266,13 @@ class ObjectDetector:
 
 
         # Define the file path where you want to save the JSON data
-        file_path = '/home/users/maali/Computer_vision_SOC/performanceResults/iou_report.json'
+        file_path = '/home/users/maali/Computer_vision_SOC/source/performanceResults/iou_report.json'
 
         # Write the combined dictionary to the file in JSON format
         with open(file_path, 'w') as json_file:
                 json.dump(adict, json_file, indent=4)
         
         return iou_scores
-
-
 
 
 
@@ -304,21 +315,24 @@ class ObjectDetector:
             # Draw bbox_x
             if row['bbox_x'] != 'no detection':
                 y1, x1, y2, x2 = row['bbox_x']
-                rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=1, edgecolor='g', facecolor='none', label=row['class_x'])
+                rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor='g', facecolor='none', label=row['class_x'])
                 ax.add_patch(rect)
                 plt.text(x1, y1, row['class_x'], color='green', fontsize=8)
 
             # Draw bbox_y (predicted bounding box)
-            bbox_y = np.array(row['bbox_y']).astype(int)
-            
-            rect_y = patches.Rectangle((bbox_y[0], bbox_y[1]), bbox_y[2] - bbox_y[0], bbox_y[3] - bbox_y[1], 
-                                    linewidth=2, edgecolor='r', facecolor='none', label=f"Pred: {row['class_y']}")
+            if type(row['bbox_y']) == str:
+                y1, x1, y2, x2 = eval(row['bbox_y'])
+            else: 
+                 y1, x1, y2, x2 = row['bbox_y']
+
+            rect_y = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, 
+                                    linewidth=1, edgecolor='r', facecolor='none', label=f"Pred: {row['class_y']}")
             ax.add_patch(rect_y)
-            plt.text(bbox_y[0], bbox_y[1], row['class_y'], fontsize=12, color='white', 
-                    bbox=dict(facecolor='red', alpha=0.5))
+            plt.text(x1, y1, row['class_y'], fontsize=8, color='red')
             # Generate a random integer between 0 and 99999
             random_number = np.random.randint(0, 100000)
 
             # Save the figure with the random integer in the filename
             plt.savefig(f'/home/users/maali/Computer_vision_SOC/samples/test_predict_samples/fp{random_number}.png')
             plt.show()
+            plt.close()

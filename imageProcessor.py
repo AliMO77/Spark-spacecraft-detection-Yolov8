@@ -6,19 +6,21 @@ import random
 import shutil
 import cv2
 from scipy.stats import norm
+from PIL import Image, ImageEnhance, ImageOps
+
 
 
 
 class ImageProcessor:
 
+    currdir = '/home/users/maali/Computer_vision_SOC'
 
     def __init__(self,train_df,val_df,test_df):
 
         self.train_df = train_df
         self.val_df = val_df
         self.test_df = test_df
-        
-        
+         
         self.train_images = '/home/users/maali/Computer_vision_SOC/samples/train/images'
         self.val_images = '/home/users/maali/Computer_vision_SOC/samples/val/images'
         self.test_images = '/home/users/maali/Computer_vision_SOC/samples/test/images'
@@ -238,13 +240,10 @@ class ImageProcessor:
                 print(f"File not found: {source_path}")
 
 
-    def new_backgrounds_augment(self,df,skip =False):
+    def new_backgrounds_augment(self,df,skip =False,image_dir = '/home/users/maali/Computer_vision_SOC/samples/train/images',output_dir = '/home/users/maali/Computer_vision_SOC/samples/train/images'):
 
         if not skip:
-            image_dir = '/home/users/maali/Computer_vision_SOC/samples/train/images'
             background_dir = '/home/users/maali/Computer_vision_SOC/syntheticBackgrounds'
-
-            output_dir = '/home/users/maali/Computer_vision_SOC/samples/train/images'
             
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
@@ -310,10 +309,80 @@ class ImageProcessor:
             new_df['bbox'] = new_df['bbox'].apply(list)
 
             return new_df
+        
 
 
 
+ 
+    def crop_flip_augment(self,df, skip=False):
+       
+        if not skip:
+            image_dir = '/home/users/maali/Computer_vision_SOC/samples/train/images'
+            output_dir = '/home/users/maali/Computer_vision_SOC/samples/train/images'
             
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+            
+            new_data = []
+
+            for index, row in df.iterrows():
+                # Read the original image
+                image_path = os.path.join(image_dir, row['filename'])
+                image = Image.open(image_path)
+
+                # Crop the object
+                y1, x1, y2, x2 = row['bbox']
+                
+                cropped_object = image.crop((x1, y1, x2, y2))
+
+               # Apply transformations
+                if np.random.rand() > 0.8:
+                    cropped_object = ImageOps.mirror(cropped_object)
+                if np.random.rand() > 0.8:
+                    cropped_object = ImageOps.flip(cropped_object)
+                if np.random.rand() > 0.8:
+                    cropped_object = cropped_object.rotate(np.random.choice([90, 180, 270], p=[0.33, 0.33, 0.34]), expand=True)
+                enhancer = ImageEnhance.Contrast(cropped_object)
+                cropped_object = enhancer.enhance(np.random.uniform(0.5, 1.5))
+
+                # Create a new white image to place the cropped object
+                new_image = Image.new('RGB', (1024,1024), (255, 255, 255))
+                obj_width, obj_height = cropped_object.size
+
+                # Calculate the position to place the cropped object on the white image
+                x_offset = (1024 - obj_width) // 2
+                y_offset = (1024 - obj_height) // 2
+
+                # Paste the cropped object onto the white image
+                new_image.paste(cropped_object, (x_offset, y_offset))
+
+                # Save the new image
+                new_filename = f"crop_augmented_{row['filename']}"
+                new_image_path = os.path.join(output_dir, new_filename)
+                new_image.save(new_image_path)
+
+                # Calculate new bounding box in YOLO format
+                x_center = (x_offset + obj_width / 2) / 1024
+                y_center = (y_offset + obj_height / 2) / 1024
+                width = obj_width / 1024
+                height = obj_height /1024
+                new_bbox = [x_center, y_center, width, height]
+
+                # Add to new dataframe
+                new_data.append({
+                    'filename': new_filename,
+                    'class': row['class'],
+                    'bbox': ','.join(map(str, new_bbox)),
+                    'num_labels': row['num_labels']
+                })
+                
+            # Create new dataframe
+            new_df = pd.DataFrame(new_data, columns=['filename', 'class', 'bbox', 'num_labels'])
+            new_df['bbox'] = new_df['bbox'].apply(eval)
+            new_df['bbox'] = new_df['bbox'].apply(list)
+
+            return new_df
+
 
 
 
