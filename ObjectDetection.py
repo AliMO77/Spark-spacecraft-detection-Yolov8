@@ -336,3 +336,52 @@ class ObjectDetector:
             plt.savefig(f'/home/users/maali/Computer_vision_SOC/samples/test_predict_samples/fp{random_number}.png')
             plt.show()
             plt.close()
+    
+    def miss_stats(self, true_df, predictions_df,false_positives_df,all_labels):
+        merged_df = pd.merge(true_df, predictions_df,on='filename')
+        no_dections = merged_df[merged_df['class_y']=='no detection']
+
+        tot_nrb_images= len(merged_df)
+        tot_nbr_nodetects= len(no_dections)
+        all_fp = len(false_positives_df)
+
+        stats = []
+
+        for label in all_labels:
+            classdf = merged_df[merged_df['class_x']==label]
+            classdf_false_positives = false_positives_df[false_positives_df['class_x']==label]
+            missclassifictions = classdf[(classdf['class_x'] != classdf['class_y']) & (classdf['class_y'] != 'no detection')]
+
+            tot_images = len(classdf)
+            tot_nodetects = len(classdf[classdf['class_y']=='no detection'])
+            tot_fp = len(classdf_false_positives)
+            tot_mc = len(missclassifictions)
+
+            fp_string = f"{tot_fp} ({tot_fp * 100 / tot_images:.2f}%)"
+            nd_str = f"{tot_nodetects} ({tot_nodetects * 100 / tot_images:.2f}%)"
+            mc_str = f"{tot_mc} ({tot_mc * 100 / tot_images:.2f}%)"
+
+
+            class_stats = pd.DataFrame({'nbr_Images':[tot_images],'false_positives':[tot_fp],'no_detections':[tot_nodetects], 'miss_classification':[tot_mc] , 
+                                        'False_positives':[fp_string],'No_detections':[nd_str],'Miss_classification':[mc_str]}
+                                        ,index=[label])
+            
+            stats.append(class_stats)
+
+
+
+        all_classes_stats = pd.concat(stats)
+        all_classes_stats['max_value'] = all_classes_stats[['False_positives', 'No_detections', 'miss_classification']].max(axis=1)
+        all_mc = all_classes_stats['miss_classification'].sum()
+
+        all_classes_stats = all_classes_stats.sort_values(by='max_value',ascending=False).drop(['max_value','false_positives','no_detections','miss_classification'],axis=1)
+
+
+        all_fp_string = f"{all_fp} ({all_fp * 100 / tot_nrb_images:.2f}%)"
+        all_nd_str = f"{tot_nbr_nodetects} ({tot_nbr_nodetects * 100 / tot_nrb_images:.2f}%)"
+        all_mc_str = f"{all_mc} ({all_mc * 100 / tot_nrb_images:.2f}%)"
+
+        new_row_df = pd.DataFrame([[tot_nrb_images,all_fp_string,all_nd_str,all_mc_str]], columns=['nbr_Images','False_positives', 'No_detections','Miss_classification'],index=['All'])
+
+        all_classes_stats = all_classes_stats.append(new_row_df)
+        return all_classes_stats
