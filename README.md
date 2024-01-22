@@ -50,5 +50,8 @@ This notebook provides a comprehensive solution for training, testing, and valid
 ## Additional Notes
 - Ensure correct setting of paths as per your local environment.
 - The notebook assumes the existence of specified directories and files.
+- The trained model is accessible in the /train2(best_model)/weights/best.pt, one can use this to evaluate/predict with this model. 
+- The /val2 directory contains the validation stats and /predict3 directory some example inference made with the trained model. 
+
 
 
