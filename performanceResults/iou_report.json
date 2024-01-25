@@ -1,62 +1,62 @@
 {
     "Overall iou score": {
-        "mean": 81.47,
+        "mean": 89.64,
         "min": 0.0,
-        "max": 99.92
+        "max": 99.84
     },
     "smart_1": {
-        "mean": 71.11,
+        "mean": 89.98,
         "min": 0.0,
-        "max": 99.72
+        "max": 99.55
     },
     "cheops": {
-        "mean": 87.83,
-        "min": 0.0,
-        "max": 99.69
-    },
-    "lisa_pathfinder": {
-        "mean": 93.43,
-        "min": 70.19,
-        "max": 99.38
-    },
-    "debris": {
-        "mean": 86.26,
-        "min": 0.0,
-        "max": 98.77
-    },
-    "proba_3_ocs": {
-        "mean": 77.17,
+        "mean": 92.06,
         "min": 0.0,
         "max": 99.5
     },
-    "proba_3_csc": {
-        "mean": 87.05,
-        "min": 0.0,
-        "max": 99.66
-    },
-    "soho": {
-        "mean": 88.28,
-        "min": 0.0,
-        "max": 99.83
-    },
-    "earth_observation_sat_1": {
-        "mean": 65.94,
-        "min": 0.0,
-        "max": 99.04
-    },
-    "proba_2": {
-        "mean": 87.45,
-        "min": 0.0,
-        "max": 99.78
-    },
-    "xmm_newton": {
-        "mean": 69.66,
-        "min": 0.0,
+    "lisa_pathfinder": {
+        "mean": 94.38,
+        "min": 75.43,
         "max": 99.33
     },
-    "double_star": {
-        "mean": 81.94,
+    "debris": {
+        "mean": 92.31,
         "min": 0.0,
-        "max": 99.92
+        "max": 99.45
+    },
+    "proba_3_ocs": {
+        "mean": 82.35,
+        "min": 0.0,
+        "max": 99.26
+    },
+    "proba_3_csc": {
+        "mean": 91.65,
+        "min": 0.0,
+        "max": 99.5
+    },
+    "soho": {
+        "mean": 90.95,
+        "min": 0.0,
+        "max": 99.38
+    },
+    "earth_observation_sat_1": {
+        "mean": 81.04,
+        "min": 0.0,
+        "max": 99.84
+    },
+    "proba_2": {
+        "mean": 93.55,
+        "min": 66.09,
+        "max": 99.33
+    },
+    "xmm_newton": {
+        "mean": 85.51,
+        "min": 0.0,
+        "max": 99.41
+    },
+    "double_star": {
+        "mean": 92.24,
+        "min": 18.82,
+        "max": 99.52
     }
 }

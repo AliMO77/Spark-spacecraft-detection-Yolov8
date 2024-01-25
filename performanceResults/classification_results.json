@@ -1,36 +1,36 @@
 {
-    "Overall Accuracy": 90.95,
+    "Overall Accuracy": 96.55,
     "smart_1": {
-        "accuracy": 86.5
-    },
-    "cheops": {
-        "accuracy": 98.0
-    },
-    "lisa_pathfinder": {
-        "accuracy": 99.0
-    },
-    "debris": {
         "accuracy": 97.5
     },
+    "cheops": {
+        "accuracy": 98.5
+    },
+    "lisa_pathfinder": {
+        "accuracy": 100.0
+    },
+    "debris": {
+        "accuracy": 99.5
+    },
     "proba_3_ocs": {
-        "accuracy": 79.5
+        "accuracy": 87.0
     },
     "proba_3_csc": {
         "accuracy": 99.5
     },
     "soho": {
-        "accuracy": 95.0
+        "accuracy": 99.0
     },
     "earth_observation_sat_1": {
-        "accuracy": 75.0
+        "accuracy": 88.5
     },
     "proba_2": {
-        "accuracy": 95.5
+        "accuracy": 97.0
     },
     "xmm_newton": {
-        "accuracy": 83.0
+        "accuracy": 96.0
     },
     "double_star": {
-        "accuracy": 92.0
+        "accuracy": 99.5
     }
 }

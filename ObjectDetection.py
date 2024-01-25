@@ -23,7 +23,8 @@ class ObjectDetector:
         self.model = model 
         pass
 
-    def train_yolo_model(self,epochs=25,patience=5,batch=8,lr0=0.0005,imgsz=640,optimizer='auto',cos_lr=True, resume = False,project='/home/users/maali/Computer_vision_SOC/runs/detect',max_det=1,save_dir=None):
+    def train_yolo_model(self,epochs=25,patience=5,batch=8,lr0=0.0005,imgsz=640,optimizer='auto',cos_lr=True, resume = False,project='/home/users/maali/Computer_vision_SOC/runs/detect',
+                         freeze=None,max_det=1,save_dir=None):
 
         # Specify the save directory for training runs
         
@@ -41,7 +42,8 @@ class ObjectDetector:
             cos_lr = cos_lr,
             resume = resume,
             max_det=max_det,
-            save_dir=save_dir
+            save_dir=save_dir,
+            freeze=freeze
             )
         
         trainer = DetectionTrainer(overrides=args)
@@ -162,7 +164,7 @@ class ObjectDetector:
         #         merged_df['class_x'],
         #           merged_df['class_y'])  
         
-        print(" accuracy : {accuracy} ")
+        print("Accuracy: ", accuracy)
         overall_dict = {
             'Overall Accuracy': round(accuracy  * 100,2),
             # 'precision': round(precision[-1]* 100,2),
