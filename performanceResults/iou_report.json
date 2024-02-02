@@ -1,62 +1,62 @@
 {
     "Overall iou score": {
-        "mean": 89.64,
+        "mean": 92.72,
         "min": 0.0,
-        "max": 99.84
+        "max": 99.88
     },
     "smart_1": {
-        "mean": 89.98,
+        "mean": 91.41,
         "min": 0.0,
-        "max": 99.55
+        "max": 99.77
     },
     "cheops": {
-        "mean": 92.06,
-        "min": 0.0,
-        "max": 99.5
+        "mean": 93.97,
+        "min": 0.67,
+        "max": 99.79
     },
     "lisa_pathfinder": {
-        "mean": 94.38,
-        "min": 75.43,
-        "max": 99.33
+        "mean": 95.72,
+        "min": 82.85,
+        "max": 99.73
     },
     "debris": {
-        "mean": 92.31,
-        "min": 0.0,
-        "max": 99.45
-    },
-    "proba_3_ocs": {
-        "mean": 82.35,
+        "mean": 94.02,
         "min": 0.0,
         "max": 99.26
     },
-    "proba_3_csc": {
-        "mean": 91.65,
+    "proba_3_ocs": {
+        "mean": 92.98,
         "min": 0.0,
-        "max": 99.5
+        "max": 99.73
+    },
+    "proba_3_csc": {
+        "mean": 94.43,
+        "min": 58.4,
+        "max": 99.69
     },
     "soho": {
-        "mean": 90.95,
-        "min": 0.0,
-        "max": 99.38
+        "mean": 93.88,
+        "min": 43.41,
+        "max": 99.75
     },
     "earth_observation_sat_1": {
-        "mean": 81.04,
+        "mean": 85.92,
         "min": 0.0,
-        "max": 99.84
+        "max": 99.83
     },
     "proba_2": {
-        "mean": 93.55,
-        "min": 66.09,
-        "max": 99.33
+        "mean": 95.66,
+        "min": 73.13,
+        "max": 99.76
     },
     "xmm_newton": {
-        "mean": 85.51,
+        "mean": 86.86,
         "min": 0.0,
-        "max": 99.41
+        "max": 99.88
     },
     "double_star": {
-        "mean": 92.24,
-        "min": 18.82,
-        "max": 99.52
+        "mean": 95.06,
+        "min": 71.45,
+        "max": 99.53
     }
 }
