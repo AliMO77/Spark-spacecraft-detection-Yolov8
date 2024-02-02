@@ -199,7 +199,7 @@ class ObjectDetector:
         combined_dict = {**overall_dict, **class_wise_stats}
 
         # Define the file path where you want to save the JSON data
-        file_path = '/home/users/maali/Computer_vision_SOC/source/performanceResults/classification_results.json'
+        file_path = '/source/performanceResults/classification_results.json'
 
         # Write the combined dictionary to the file in JSON format
         with open(file_path, 'w') as json_file:
@@ -268,7 +268,7 @@ class ObjectDetector:
 
 
         # Define the file path where you want to save the JSON data
-        file_path = '/home/users/maali/Computer_vision_SOC/source/performanceResults/iou_report.json'
+        file_path = '/source/performanceResults/iou_report.json'
 
         # Write the combined dictionary to the file in JSON format
         with open(file_path, 'w') as json_file:
